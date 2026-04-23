@@ -35,7 +35,6 @@ class SearchPage(BasePage):
                 items = await self.page.query_selector_all(self.item_container)
                 for item in items:
                     price_text_element = await item.query_selector(".s-card__price, .s-item__price")
-                    await self.page.pause()
 
                     if price_text_element:
                         price_text = await price_text_element.inner_text()

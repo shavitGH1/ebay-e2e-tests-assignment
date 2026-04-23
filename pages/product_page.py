@@ -9,24 +9,22 @@ class ProductPage(BasePage):
         super().__init__(page)
         self.add_to_cart_button: str = "#atcBtn_btn_1"
         self.options_container_selector: str = "div.x-msku-evo"
-        # Precise selector for the 'See in cart' button within the confirmation overlay
         self.see_in_cart_button: str = "//div[contains(@class, 'lightbox-dialog__main')]//a[.//span[text()='See in cart']]"
 
     async def add_items_to_cart(self, urls: List[str]) -> None:
-        with allure.step(f"Adding {len(urls)} items to cart and navigating to cart after each"):
+        with allure.step(f"Adding {len(urls)} items to cart"):
             for i, url in enumerate(urls):
                 await self.navigate(url)
 
                 with allure.step(f"Handling options for item #{i + 1}"):
                     options_container = await self.page.query_selector(self.options_container_selector)
                     if options_container:
-                        # Loop until no more dropdowns with "Select" are found.
                         while True:
                             unselected_button = await options_container.query_selector(
                                 "button:has-text('Select')"
                             )
                             if not unselected_button:
-                                break  # Exit loop if no more dropdowns say "Select"
+                                break
 
                             await unselected_button.click()
                             await self.page.wait_for_timeout(500)
@@ -42,19 +40,17 @@ class ProductPage(BasePage):
                                 else:
                                     break
                 
-                # Click "Add to cart"
                 add_to_cart_btn = await self.page.query_selector(self.add_to_cart_button)
                 if add_to_cart_btn and await add_to_cart_btn.is_visible():
                     await add_to_cart_btn.click()
                     
-                    # Wait for the confirmation popup and click "See in cart"
+                    # Take screenshot after adding item to cart
+                    await self.take_screenshot(f"Added item #{i+1}")
+
                     try:
                         see_in_cart_btn = await self.page.wait_for_selector(self.see_in_cart_button, state='visible', timeout=5000)
                         await see_in_cart_btn.click()
-                        # Wait for navigation to complete after clicking "See in cart"
                         await self.page.wait_for_load_state("domcontentloaded")
                     except TimeoutError:
-                        allure.step("Could not find 'See in cart' button. Continuing to next item.")
+                        allure.step("Could not find 'See in cart' button. The cart may have opened automatically.")
                         pass
-                
-                await self.take_screenshot(f"Added item #{i+1} from {url}")
