@@ -9,51 +9,52 @@ class ProductPage(BasePage):
         super().__init__(page)
         self.add_to_cart_button: str = "#atcBtn_btn_1"
         self.options_container_selector: str = "div.x-msku-evo"
-        # Precise selector for the "See in cart" button within the main dialog overlay
+        # Precise selector for the 'See in cart' button within the confirmation overlay
         self.see_in_cart_button: str = "//div[contains(@class, 'lightbox-dialog__main')]//a[.//span[text()='See in cart']]"
 
     async def add_items_to_cart(self, urls: List[str]) -> None:
-        with allure.step(f"Adding {len(urls)} items to cart"):
-            for url in urls:
+        with allure.step(f"Adding {len(urls)} items to cart and navigating to cart after each"):
+            for i, url in enumerate(urls):
                 await self.navigate(url)
 
-                with allure.step("Handling all product option dropdowns sequentially"):
+                with allure.step(f"Handling options for item #{i + 1}"):
                     options_container = await self.page.query_selector(self.options_container_selector)
                     if options_container:
+                        # Loop until no more dropdowns with "Select" are found.
                         while True:
                             unselected_button = await options_container.query_selector(
                                 "button:has-text('Select')"
                             )
                             if not unselected_button:
-                                allure.step("No more unselected dropdowns found. Proceeding.")
-                                break
-
-                            allure.step("Found an unselected dropdown. Making a selection.")
-                            listbox_id = await unselected_button.get_attribute("aria-controls")
-                            if not listbox_id:
-                                break
+                                break  # Exit loop if no more dropdowns say "Select"
 
                             await unselected_button.click()
                             await self.page.wait_for_timeout(500)
 
-                            first_valid_option = await self.page.query_selector(
-                                f"#{listbox_id} div.listbox__option:not([aria-disabled='true']):not(:has-text('Select'))"
-                            )
-                            
-                            if first_valid_option:
-                                await first_valid_option.click()
-                                await self.page.wait_for_load_state("load", timeout=10000)
-                            else:
-                                break
-                    
+                            listbox_id = await unselected_button.get_attribute("aria-controls")
+                            if listbox_id:
+                                first_valid_option = await self.page.query_selector(
+                                    f"#{listbox_id} div.listbox__option:not([aria-disabled='true']):not(:has-text('Select'))"
+                                )
+                                if first_valid_option:
+                                    await first_valid_option.click()
+                                    await self.page.wait_for_load_state("load", timeout=10000)
+                                else:
+                                    break
+                
+                # Click "Add to cart"
                 add_to_cart_btn = await self.page.query_selector(self.add_to_cart_button)
                 if add_to_cart_btn and await add_to_cart_btn.is_visible():
                     await add_to_cart_btn.click()
                     
+                    # Wait for the confirmation popup and click "See in cart"
                     try:
                         see_in_cart_btn = await self.page.wait_for_selector(self.see_in_cart_button, state='visible', timeout=5000)
                         await see_in_cart_btn.click()
+                        # Wait for navigation to complete after clicking "See in cart"
+                        await self.page.wait_for_load_state("domcontentloaded")
                     except TimeoutError:
-                        allure.step("Could not find 'See in cart' button. The cart may have opened automatically.")
-
-                await self.take_screenshot(f"Added item from {url}")
+                        allure.step("Could not find 'See in cart' button. Continuing to next item.")
+                        pass
+                
+                await self.take_screenshot(f"Added item #{i+1} from {url}")

@@ -2,7 +2,7 @@ import pytest
 import json
 import asyncio
 from typing import Dict, Any
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, Page
 from pages.search_page import SearchPage
 from pages.product_page import ProductPage
 from pages.cart_page import CartPage
@@ -16,13 +16,6 @@ def config() -> Dict[str, Any]:
 
 @pytest.mark.asyncio
 async def test_search_add_to_cart_and_assert_total(config: Dict[str, Any]) -> None:
-    """
-    Main E2E test flow:
-    1. Logs in to eBay.
-    2. Searches for an item.
-    3. Adds a specified number of items to the cart under a max price.
-    4. Navigates to the cart and asserts the total does not exceed the budget.
-    """
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
         context = await browser.new_context()
@@ -33,17 +26,24 @@ async def test_search_add_to_cart_and_assert_total(config: Dict[str, Any]) -> No
         product_page = ProductPage(page)
         cart_page = CartPage(page)
 
+        # 1. Navigate and log in
         await login_page.navigate("https://www.ebay.com")
         await login_page.login(config['username'], config['password'])
         
+        # 2. Search for items and get URLs
         item_urls = await search_page.search_items_by_name_under_price(
             config['search_query'],
             config['max_price'],
             config['items_limit']
         )
         
+        # 3. Add all items to the cart, clicking "See in cart" after each one
         await product_page.add_items_to_cart(item_urls)
         
+        # 4. As a final step, navigate to the main cart page to ensure we are in the right place
+        await cart_page.navigate_to_cart()
+
+        # 5. Assert the total on the final cart page
         await cart_page.assert_cart_total_not_exceeds(
             config['max_price'],
             len(item_urls)
@@ -53,7 +53,6 @@ async def test_search_add_to_cart_and_assert_total(config: Dict[str, Any]) -> No
         await browser.close()
 
 if __name__ == "__main__":
-    # This allows running the test directly for debugging.
     with open('data/config.json') as f:
         main_config = json.load(f)
     asyncio.run(test_search_add_to_cart_and_assert_total(main_config))
