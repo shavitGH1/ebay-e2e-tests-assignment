@@ -30,6 +30,8 @@ jobs:
         playwright install --with-deps
 
     - name: Test with pytest
+      env:
+        CI: true
       run: pytest --alluredir=allure-results
 
     - name: Upload Allure results

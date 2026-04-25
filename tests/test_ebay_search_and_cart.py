@@ -1,5 +1,6 @@
 import pytest
 import json
+import os
 from typing import Dict, Any, AsyncGenerator
 from playwright.async_api import async_playwright, Page, BrowserContext
 from pages.search_page import SearchPage
@@ -15,8 +16,9 @@ def config() -> Dict[str, Any]:
 
 @pytest.fixture(scope="function")
 async def page_setup(config: Dict[str, Any]) -> AsyncGenerator[Page, None]:
+    headless_mode = os.environ.get("CI", "false").lower() == "true"
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=headless_mode)
         context = await browser.new_context()
         page = await context.new_page()
         
