@@ -16,7 +16,7 @@ def config() -> Dict[str, Any]:
 @pytest.fixture(scope="function")
 async def page_setup(config: Dict[str, Any]) -> AsyncGenerator[Page, None]:
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         page = await context.new_page()
         
