@@ -9,6 +9,7 @@ class CartPage(BasePage):
         super().__init__(page)
         self.cart_total_element: str = "div[data-test-id='SUBTOTAL']"
         self.cart_icon: str = "a[href='https://www.ebay.com/cart']" # More specific selector for the cart icon
+        self.remove_item_button: str = "button[data-test-id='cart-remove-item']"
 
     async def navigate_to_cart(self) -> None:
         """Clicks the main cart icon to ensure the test is on the final cart page."""
@@ -33,3 +34,26 @@ class CartPage(BasePage):
             
             allure.attach(f"Actual Total: ${total_price}, Budget: ${budget}", name="Price Comparison")
             assert total_price <= budget, f"Cart total ${total_price} exceeds budget ${budget}"
+
+    async def empty_cart(self) -> None:
+        """Removes all items from the cart."""
+        with allure.step("Emptying the shopping cart"):
+            # Create a strict locator for the buttons
+            remove_buttons = self.page.locator(self.remove_item_button)
+
+            while True:
+                # Check how many remove buttons are currently on the screen
+                count = await remove_buttons.count()
+                if count == 0:
+                    break  # Cart is empty, exit the loop
+
+                # Always click the first button in the list.
+                # Locators will automatically wait for the button to be visible and clickable.
+                await remove_buttons.first.click()
+
+                # Wait explicitly for the DOM to update by ensuring the count decreases.
+                # We pass the selector and the old count directly into the browser context.
+                await self.page.wait_for_function(
+                    "([selector, oldCount]) => document.querySelectorAll(selector).length < oldCount",
+                    arg=[self.remove_item_button, count]
+                )

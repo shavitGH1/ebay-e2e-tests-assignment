@@ -49,6 +49,9 @@ async def test_search_add_to_cart_and_assert_total(config: Dict[str, Any]) -> No
             len(item_urls)
         )
 
+        # 6. Cleanup - Empty the cart
+        await cart_page.empty_cart()
+
         await context.close()
         await browser.close()
 
