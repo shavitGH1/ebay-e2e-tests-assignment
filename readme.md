@@ -14,7 +14,7 @@
 
 # Installation:
 # 1. Install dependencies
-pip install playwright pytest pytest-playwright allure-pytest
+pip install -r requirements.txt
 # 2. Install Playwright Chromium browser
 
 
