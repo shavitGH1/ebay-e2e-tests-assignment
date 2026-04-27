@@ -18,8 +18,15 @@ def config() -> Dict[str, Any]:
 @pytest.fixture(scope="function")
 async def page_setup(config: Dict[str, Any]) -> AsyncGenerator[Page, None]:
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context()
+        browser = await p.chromium.launch(
+            headless=False,
+            args=["--disable-blink-features=AutomationControlled"]
+        )
+
+        # Create a context with a custom User Agent to match a real browser
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        )
         page = await context.new_page()
 
         login_page = LoginPage(page)
