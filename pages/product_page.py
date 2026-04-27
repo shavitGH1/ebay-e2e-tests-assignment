@@ -1,8 +1,9 @@
 import allure
+import random
 from typing import List
 from playwright.async_api import Page, TimeoutError
 from pages.base_page import BasePage
-
+from utils.wait_utils import random_async_wait, human_like_click
 
 class ProductPage(BasePage):
     def __init__(self, page: Page) -> None:
@@ -15,6 +16,7 @@ class ProductPage(BasePage):
         with allure.step(f"Adding {len(urls)} items to cart"):
             for i, url in enumerate(urls):
                 await self.navigate(url)
+                await random_async_wait()
 
                 with allure.step(f"Handling options for item #{i + 1}"):
                     options_container = await self.page.query_selector(self.options_container_selector)
@@ -27,7 +29,7 @@ class ProductPage(BasePage):
                                 break
 
                             await unselected_button.click()
-                            await self.page.wait_for_timeout(500)
+                            await random_async_wait(200, 500)
 
                             listbox_id = await unselected_button.get_attribute("aria-controls")
                             if listbox_id:
@@ -42,15 +44,15 @@ class ProductPage(BasePage):
 
                 add_to_cart_btn = await self.page.query_selector(self.add_to_cart_button)
                 if add_to_cart_btn and await add_to_cart_btn.is_visible():
-                    await add_to_cart_btn.click()
+                    await human_like_click(self.page, self.add_to_cart_button)
+                    await random_async_wait()
 
-                    # Take screenshot after adding item to cart
                     await self.take_screenshot(f"Added item #{i + 1}")
 
                     try:
                         see_in_cart_btn = await self.page.wait_for_selector(self.see_in_cart_button, state='visible',
                                                                             timeout=5000)
-                        await see_in_cart_btn.click()
+                        await human_like_click(self.page, self.see_in_cart_button)
                         await self.page.wait_for_load_state("domcontentloaded")
                     except TimeoutError:
                         allure.step("Could not find 'See in cart' button. The cart may have opened automatically.")

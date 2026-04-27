@@ -1,16 +1,16 @@
 import allure
 import re
+import random
 from typing import List
 from playwright.async_api import Page
 from pages.base_page import BasePage
-
+from utils.wait_utils import random_async_wait, human_like_click
 
 class SearchPage(BasePage):
     def __init__(self, page: Page) -> None:
         super().__init__(page)
         self.search_input: str = "#gh-ac"
         self.search_button: str = "#gh-search-btn"
-        # Updated selector to only find items within the main results list, ignoring hidden templates.
         self.item_container: str = "//ul[contains(@class, 'srp-results')]/li[@data-listingid]"
         self.price_input_min: str = "input[aria-label*='Minimum Value']"
         self.price_input_max: str = "input[aria-label*='Maximum Value']"
@@ -19,14 +19,19 @@ class SearchPage(BasePage):
 
     async def search_items_by_name_under_price(self, query: str, max_price: float, limit: int) -> List[str]:
         with allure.step(f"Searching for '{query}' with max price ${max_price}"):
-            await self.utils.fill_element(self.search_input, query)
-            await self.utils.click_element(self.search_button)
+            await self.page.type(self.search_input, query, delay=random.randint(50, 150))
+            await random_async_wait()
+            await human_like_click(self.page, self.search_button)
+            await random_async_wait()
+
             with allure.step(f"Filtering price between 1 and {max_price}"):
                 if await self.page.is_visible(self.price_input_min):
-                    await self.utils.fill_element(self.price_input_min, "1")
-                    await self.utils.fill_element(self.price_input_max, str(max_price))
+                    await self.page.type(self.price_input_min, "1", delay=random.randint(50, 150))
+                    await random_async_wait()
+                    await self.page.type(self.price_input_max, str(max_price), delay=random.randint(50, 150))
+                    await random_async_wait()
                     if await self.page.is_enabled(self.price_submit_button):
-                        await self.page.click(self.price_submit_button)
+                        await human_like_click(self.page, self.price_submit_button)
                         await self.page.wait_for_load_state("networkidle")
 
             item_urls: List[str] = []
@@ -55,7 +60,8 @@ class SearchPage(BasePage):
                                         break
 
                 if len(item_urls) < limit and await self.page.is_visible(self.next_page_button):
-                    await self.utils.click_element(self.next_page_button)
+                    await human_like_click(self.page, self.next_page_button)
+                    await random_async_wait()
                 else:
                     break
 
