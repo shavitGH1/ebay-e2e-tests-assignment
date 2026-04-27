@@ -8,11 +8,17 @@ async def random_async_wait(min_ms: int = 500, max_ms: int = 1500):
     await asyncio.sleep(sleep_time_s)
 
 async def human_like_click(page: Page, selector: str):
-    """Performs a more human-like click on an element."""
+    """Performs a more human-like click on an element, scrolling if necessary."""
     element = page.locator(selector)
+    
+    # Scroll the element into view if it's not already
+    await element.scroll_into_view_if_needed()
+    
     box = await element.bounding_box()
     
     if not box:
+        # If the element is still not visible, fall back to a standard click
+        await element.click()
         return
 
     target_x = box['x'] + (box['width'] * random.uniform(0.2, 0.8))
