@@ -19,16 +19,16 @@ class SearchPage(BasePage):
 
     async def search_items_by_name_under_price(self, query: str, max_price: float, limit: int) -> List[str]:
         with allure.step(f"Searching for '{query}' with max price ${max_price}"):
-            await self.page.type(self.search_input, query, delay=random.randint(50, 150))
+            await self.page.type(self.search_input, query, delay=random.randint(100, 250))
             await random_async_wait()
             await human_like_click(self.page, self.search_button)
             await random_async_wait()
 
             with allure.step(f"Filtering price between 1 and {max_price}"):
                 if await self.page.is_visible(self.price_input_min):
-                    await self.page.type(self.price_input_min, "1", delay=random.randint(50, 150))
+                    await self.page.type(self.price_input_min, "1", delay=random.randint(100, 250))
                     await random_async_wait()
-                    await self.page.type(self.price_input_max, str(max_price), delay=random.randint(50, 150))
+                    await self.page.type(self.price_input_max, str(max_price), delay=random.randint(100, 250))
                     await random_async_wait()
                     if await self.page.is_enabled(self.price_submit_button):
                         await human_like_click(self.page, self.price_submit_button)

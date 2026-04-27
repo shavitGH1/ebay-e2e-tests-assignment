@@ -24,13 +24,13 @@ class LoginPage(BasePage):
             await random_async_wait()
 
             await self.page.wait_for_selector(self.userid_input, state='visible')
-            await self.page.type(self.userid_input, username, delay=random.randint(50, 150))
+            await self.page.type(self.userid_input, username, delay=random.randint(100, 250))
             await random_async_wait()
             await human_like_click(self.page, self.continue_button)
             await random_async_wait()
 
             await self.page.wait_for_selector(self.password_input, state='visible')
-            await self.page.type(self.password_input, password, delay=random.randint(50, 150))
+            await self.page.type(self.password_input, password, delay=random.randint(100, 250))
             await random_async_wait()
             await human_like_click(self.page, self.signin_submit_button)
 
