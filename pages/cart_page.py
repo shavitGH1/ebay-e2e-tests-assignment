@@ -31,8 +31,8 @@ class CartPage(BasePage):
             
             total_price = float(price_match.group(0))
             budget = budget_per_item * items_count
-            
-            allure.attach(f"Actual Total: ${total_price}, Budget: ${budget}", name="Price Comparison")
+
+            await self.take_screenshot(f"Cart Page - Budget: ${budget}")
             assert total_price <= budget, f"Cart total ${total_price} exceeds budget ${budget}"
 
     async def empty_cart(self) -> None:
