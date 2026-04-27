@@ -41,7 +41,7 @@ class SearchPage(BasePage):
                         price_match = re.search(r'[\d,]+\.\d{2}', price_text.replace(',', ''))
                         if not price_match:
                             continue
-                        
+
                         price = float(price_match.group(0))
 
                         if 1 <= price <= max_price:
@@ -53,11 +53,11 @@ class SearchPage(BasePage):
                                     item_urls.append(url)
                                     if len(item_urls) >= limit:
                                         break
-                
+
                 if len(item_urls) < limit and await self.page.is_visible(self.next_page_button):
                     await self.utils.click_element(self.next_page_button)
                 else:
                     break
-            
+
             allure.attach(str(item_urls), name="Collected URLs", attachment_type=allure.attachment_type.TEXT)
             return item_urls[:limit]

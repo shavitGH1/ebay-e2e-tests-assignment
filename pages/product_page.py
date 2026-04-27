@@ -39,16 +39,17 @@ class ProductPage(BasePage):
                                     await self.page.wait_for_load_state("load", timeout=10000)
                                 else:
                                     break
-                
+
                 add_to_cart_btn = await self.page.query_selector(self.add_to_cart_button)
                 if add_to_cart_btn and await add_to_cart_btn.is_visible():
                     await add_to_cart_btn.click()
-                    
+
                     # Take screenshot after adding item to cart
-                    await self.take_screenshot(f"Added item #{i+1}")
+                    await self.take_screenshot(f"Added item #{i + 1}")
 
                     try:
-                        see_in_cart_btn = await self.page.wait_for_selector(self.see_in_cart_button, state='visible', timeout=5000)
+                        see_in_cart_btn = await self.page.wait_for_selector(self.see_in_cart_button, state='visible',
+                                                                            timeout=5000)
                         await see_in_cart_btn.click()
                         await self.page.wait_for_load_state("domcontentloaded")
                     except TimeoutError:
