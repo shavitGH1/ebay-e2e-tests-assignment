@@ -1,0 +1,6 @@
+pytest
+pytest-asyncio
+playwright
+allure-pytest
+
+allure-python-commons

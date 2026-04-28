@@ -58,3 +58,6 @@ pip-wheel-metadata/
 
 # pytest debug logs generated via --debug
 pytestdebug.log
+
+# allure-results
+allure-results/
