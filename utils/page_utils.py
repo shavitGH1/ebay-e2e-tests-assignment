@@ -7,17 +7,14 @@ class PageUtils:
         self.page = page
 
     @allure.step("Clicking element: {selector}")
-    async def click_element(self, selector: str, **kwargs) -> None:
+    async def click_element(self, selector: str) -> None:
         """Clicks an element and waits for the page to settle."""
-        await self.page.click(selector, **kwargs)
-        await self.wait_for_page_load()
+        await self.page.locator(selector).click()
+        await self.page.wait_for_load_state("domcontentloaded")
 
     @allure.step("Filling '{text}' into element: {selector}")
-    async def fill_element(self, selector: str, text: str, **kwargs) -> None:
-        """Fills an element with text."""
-        await self.page.fill(selector, text, **kwargs)
-
-    @allure.step("Waiting for page to load")
-    async def wait_for_page_load(self) -> None:
-        """Waits for the page's load event to fire."""
-        await self.page.wait_for_load_state('load')
+    async def fill_element(self, selector: str, text: str) -> None:
+        """Fills an element with text, ensuring it is focused first."""
+        locator = self.page.locator(selector)
+        await locator.wait_for(state='visible')
+        await locator.fill(text)

@@ -10,7 +10,6 @@ class SearchPage(BasePage):
         super().__init__(page)
         self.search_input: str = "#gh-ac"
         self.search_button: str = "#gh-search-btn"
-        # Updated selector to only find items within the main results list, ignoring hidden templates.
         self.item_container: str = "//ul[contains(@class, 'srp-results')]/li[@data-listingid]"
         self.price_input_min: str = "input[aria-label*='Minimum Value']"
         self.price_input_max: str = "input[aria-label*='Maximum Value']"
@@ -21,23 +20,23 @@ class SearchPage(BasePage):
         with allure.step(f"Searching for '{query}' with max price ${max_price}"):
             await self.utils.fill_element(self.search_input, query)
             await self.utils.click_element(self.search_button)
+
             with allure.step(f"Filtering price between 1 and {max_price}"):
-                if await self.page.is_visible(self.price_input_min):
+                if await self.page.locator(self.price_input_min).is_visible():
                     await self.utils.fill_element(self.price_input_min, "1")
                     await self.utils.fill_element(self.price_input_max, str(max_price))
-                    if await self.page.is_enabled(self.price_submit_button):
-                        await self.page.click(self.price_submit_button)
-                        await self.page.wait_for_load_state("networkidle")
+                    if await self.page.locator(self.price_submit_button).is_enabled():
+                        await self.utils.click_element(self.price_submit_button)
 
             item_urls: List[str] = []
             while len(item_urls) < limit:
-                await self.wait_for_selector(self.item_container)
-                items = await self.page.query_selector_all(self.item_container)
+                await self.page.locator(self.item_container).first.wait_for()
+                items = await self.page.locator(self.item_container).all()
                 for item in items:
-                    price_text_element = await item.query_selector(".s-card__price, .s-item__price")
+                    price_text_element = item.locator(".s-card__price, .s-item__price")
 
-                    if price_text_element:
-                        price_text = await price_text_element.inner_text()
+                    if await price_text_element.count() > 0:
+                        price_text = await price_text_element.first.inner_text()
                         price_match = re.search(r'[\d,]+\.\d{2}', price_text.replace(',', ''))
                         if not price_match:
                             continue
@@ -45,16 +44,16 @@ class SearchPage(BasePage):
                         price = float(price_match.group(0))
 
                         if 1 <= price <= max_price:
-                            url_element = await item.query_selector("a.s-card__link, a.s-item__link")
+                            url_element = item.locator("a.s-card__link, a.s-item__link")
 
-                            if url_element:
-                                url = await url_element.get_attribute('href')
+                            if await url_element.count() > 0:
+                                url = await url_element.first.get_attribute('href')
                                 if url and url not in item_urls:
                                     item_urls.append(url)
                                     if len(item_urls) >= limit:
                                         break
 
-                if len(item_urls) < limit and await self.page.is_visible(self.next_page_button):
+                if len(item_urls) < limit and await self.page.locator(self.next_page_button).is_visible():
                     await self.utils.click_element(self.next_page_button)
                 else:
                     break

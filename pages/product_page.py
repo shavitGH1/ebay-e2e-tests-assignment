@@ -18,20 +18,17 @@ class ProductPage(BasePage):
             for i, url in enumerate(urls):
                 await self.navigate(url)
 
-                # Highlight the product title and take a screenshot
-                await self.page.wait_for_selector(self.product_title, state='visible')
-                title_element = self.page.locator(self.product_title)
-                await title_element.highlight()
+                # Take a screenshot of the product page
+                title_locator = self.page.locator(self.product_title)
+                await title_locator.wait_for(state='visible')
                 await self.take_screenshot(f"Product Page - Item #{i + 1}")
 
                 with allure.step(f"Handling options for item #{i + 1}"):
-                    options_container = await self.page.query_selector(self.options_container_selector)
-                    if options_container:
+                    options_container = self.page.locator(self.options_container_selector)
+                    if await options_container.count() > 0:
                         while True:
-                            unselected_button = await options_container.query_selector(
-                                "button:has-text('Select')"
-                            )
-                            if not unselected_button:
+                            unselected_button = options_container.locator("button:has-text('Select')").first
+                            if not await unselected_button.count():
                                 break
 
                             await unselected_button.click()
@@ -39,28 +36,27 @@ class ProductPage(BasePage):
 
                             listbox_id = await unselected_button.get_attribute("aria-controls")
                             if listbox_id:
-                                first_valid_option = await self.page.query_selector(
+                                first_valid_option = self.page.locator(
                                     f"#{listbox_id} div.listbox__option:not([aria-disabled='true']):not(:has-text('Select'))"
-                                )
-                                if first_valid_option:
+                                ).first
+                                if await first_valid_option.count() > 0:
                                     await first_valid_option.click()
                                     await self.page.wait_for_load_state("load", timeout=10000)
                                 else:
                                     break
 
-                add_to_cart_btn = await self.page.query_selector(self.add_to_cart_button)
-                if add_to_cart_btn and await add_to_cart_btn.is_visible():
-                    await add_to_cart_btn.click()
+                add_to_cart_btn = self.page.locator(self.add_to_cart_button)
+                if await add_to_cart_btn.is_visible():
+                    await self.utils.click_element(self.add_to_cart_button)
 
                     # Take screenshot after adding item to cart
-                    await self.page.wait_for_selector(self.added_to_cart_confirmation, state='visible')
-                    await self.take_screenshot(f"Added item #{i + 1}")
 
                     try:
-                        see_in_cart_btn = await self.page.wait_for_selector(self.see_in_cart_button, state='visible',
-                                                                            timeout=5000)
-                        await see_in_cart_btn.click()
-                        await self.page.wait_for_load_state("domcontentloaded")
+                        see_in_cart_btn = self.page.locator(self.see_in_cart_button)
+                        await see_in_cart_btn.wait_for(state='visible', timeout=5000)
+                        await self.take_screenshot(f"Added item #{i + 1}")
+
+                        await self.utils.click_element(self.see_in_cart_button)
                     except TimeoutError:
                         allure.step("Could not find 'See in cart' button. The cart may have opened automatically.")
                         pass

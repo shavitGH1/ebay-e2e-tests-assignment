@@ -11,14 +11,9 @@ class BasePage:
     @allure.step("Navigating to {url}")
     async def navigate(self, url: str) -> None:
         await self.page.goto(url)
-        await self.utils.wait_for_page_load()
-
-    @allure.step("Waiting for selector: {selector}")
-    async def wait_for_selector(self, selector: str) -> None:
-        await self.page.wait_for_selector(selector)
+        await self.page.wait_for_load_state("domcontentloaded")
 
     @allure.step("Taking screenshot: {name}")
     async def take_screenshot(self, name: str) -> None:
         screenshot = await self.page.screenshot()
         allure.attach(screenshot, name=name, attachment_type=allure.attachment_type.PNG)
-        

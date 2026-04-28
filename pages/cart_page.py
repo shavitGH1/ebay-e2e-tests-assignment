@@ -8,24 +8,22 @@ class CartPage(BasePage):
     def __init__(self, page: Page) -> None:
         super().__init__(page)
         self.cart_total_element: str = "div[data-test-id='SUBTOTAL']"
-        self.cart_icon: str = "a[href='https://www.ebay.com/cart']"  # More specific selector for the cart icon
+        self.cart_icon: str = "a[href='https://www.ebay.com/cart']"
         self.remove_item_button: str = "button[data-test-id='cart-remove-item']"
-        self.cart_items: str = "div.cart-bucket"  # A selector for the container of cart items
+        self.cart_items: str = "div.cart-bucket"
 
     async def navigate_to_cart(self) -> None:
         """Clicks the main cart icon to ensure the test is on the final cart page."""
         with allure.step("Navigating to the main shopping cart page"):
-            cart_button = await self.page.query_selector(self.cart_icon)
-            if cart_button:
-                await cart_button.click()
-                await self.page.wait_for_load_state("domcontentloaded")
+            if await self.page.locator(self.cart_icon).count() > 0:
+                await self.utils.click_element(self.cart_icon)
 
     async def assert_cart_total_not_exceeds(self, budget_per_item: float, items_count: int) -> None:
         with allure.step(f"Asserting cart total is within budget"):
-            await self.page.wait_for_selector(self.cart_items, state='visible')
-            await self.wait_for_selector(self.cart_total_element)
+            await self.page.locator(self.cart_items).first.wait_for(state='visible')
+            await self.page.locator(self.cart_total_element).wait_for()
 
-            total_price_text = await self.page.inner_text(self.cart_total_element)
+            total_price_text = await self.page.locator(self.cart_total_element).inner_text()
 
             price_match = re.search(r'[\d,]+\.\d{2}', total_price_text.replace(',', ''))
             if not price_match:
