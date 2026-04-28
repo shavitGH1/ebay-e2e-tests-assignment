@@ -11,7 +11,8 @@ class LoginPage(BasePage):
         self.continue_button: str = "#signin-continue-btn"
         self.password_input: str = "#pass"
         self.signin_submit_button: str = "#sgnBt"
-        self.skip_passkey_button: str = "#passkeys-cancel-btn"  # Selector for the skip button
+        self.skip_passkey_button: str = "#passkeys-cancel-btn"
+        self.main_content: str = "#mainContent"  # A common selector for the main content area
 
     async def login(self, username: str, password: str) -> None:
         with allure.step(f"Logging in as {username}"):
@@ -35,5 +36,6 @@ class LoginPage(BasePage):
                     # If the button doesn't appear after 5 seconds, just continue.
                     allure.step("Passkey page did not appear. Continuing.")
                     pass
-
+            
+            await self.page.wait_for_selector(self.main_content, state='visible')
             await self.take_screenshot("Logged In")

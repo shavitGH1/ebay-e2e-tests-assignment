@@ -21,3 +21,4 @@ class BasePage:
     async def take_screenshot(self, name: str) -> None:
         screenshot = await self.page.screenshot()
         allure.attach(screenshot, name=name, attachment_type=allure.attachment_type.PNG)
+        

@@ -10,6 +10,7 @@ class CartPage(BasePage):
         self.cart_total_element: str = "div[data-test-id='SUBTOTAL']"
         self.cart_icon: str = "a[href='https://www.ebay.com/cart']"  # More specific selector for the cart icon
         self.remove_item_button: str = "button[data-test-id='cart-remove-item']"
+        self.cart_items: str = "div.cart-bucket"  # A selector for the container of cart items
 
     async def navigate_to_cart(self) -> None:
         """Clicks the main cart icon to ensure the test is on the final cart page."""
@@ -21,6 +22,7 @@ class CartPage(BasePage):
 
     async def assert_cart_total_not_exceeds(self, budget_per_item: float, items_count: int) -> None:
         with allure.step(f"Asserting cart total is within budget"):
+            await self.page.wait_for_selector(self.cart_items, state='visible')
             await self.wait_for_selector(self.cart_total_element)
 
             total_price_text = await self.page.inner_text(self.cart_total_element)

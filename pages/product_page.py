@@ -7,14 +7,22 @@ from pages.base_page import BasePage
 class ProductPage(BasePage):
     def __init__(self, page: Page) -> None:
         super().__init__(page)
+        self.product_title: str = "h1.x-item-title__mainTitle"
         self.add_to_cart_button: str = "#atcBtn_btn_1"
         self.options_container_selector: str = "div.x-msku-evo"
         self.see_in_cart_button: str = "//div[contains(@class, 'lightbox-dialog__main')]//a[.//span[text()='See in cart']]"
+        self.added_to_cart_confirmation: str = "div.page-notice--confirmation"
 
     async def add_items_to_cart(self, urls: List[str]) -> None:
         with allure.step(f"Adding {len(urls)} items to cart"):
             for i, url in enumerate(urls):
                 await self.navigate(url)
+
+                # Highlight the product title and take a screenshot
+                await self.page.wait_for_selector(self.product_title, state='visible')
+                title_element = self.page.locator(self.product_title)
+                await title_element.highlight()
+                await self.take_screenshot(f"Product Page - Item #{i + 1}")
 
                 with allure.step(f"Handling options for item #{i + 1}"):
                     options_container = await self.page.query_selector(self.options_container_selector)
@@ -45,6 +53,7 @@ class ProductPage(BasePage):
                     await add_to_cart_btn.click()
 
                     # Take screenshot after adding item to cart
+                    await self.page.wait_for_selector(self.added_to_cart_confirmation, state='visible')
                     await self.take_screenshot(f"Added item #{i + 1}")
 
                     try:

@@ -21,7 +21,6 @@ async def page_setup(config: Dict[str, Any]) -> AsyncGenerator[Page, None]:
         browser = await p.chromium.launch(headless=False)
         context = await browser.new_context()
         page = await context.new_page()
-
         login_page = LoginPage(page)
         await login_page.navigate("https://www.ebay.com")
         await login_page.login(config['username'], config['password'])
