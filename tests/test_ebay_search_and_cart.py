@@ -10,7 +10,7 @@ from pages.login_page import LoginPage
 
 @pytest.fixture(scope="module")
 def config() -> Dict[str, Any]:
-    with open('data/config.json') as config_file:
+    with open('data/ebay_search_and_cart.json') as config_file:
         data = json.load(config_file)
     return data
 
